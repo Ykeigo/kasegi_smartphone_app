@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/add_game_check_item_page.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -93,15 +94,21 @@ class _CheckboxListTileExampleState extends State<CheckboxListTileExample> {
 
     checkboxListTileWidgets.add(ElevatedButton(
       onPressed: () async {
-        await widget.dbHelper
-            .insertChecklistItem(ChecklistItem("title", "subtitle"));
-        final checklistItems = await widget.dbHelper.getChecklistItems();
-        checkboxListTileStateList.addAll(checklistItems
-            .map((e) => CheckboxListTileState(false, e.title, e.subtitle)));
+        (String, String) result = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => TextFormFieldExample()),
+        );
+        logger.d("result: $result");
 
-        for (var element in checkboxListTileStateList) {
-          logger.d(element.title);
-        }
+        debugPrint('debugger breakpoint here');
+
+        await widget.dbHelper
+            .insertChecklistItem(ChecklistItem(result.$1, result.$2));
+        final checklistItems = await widget.dbHelper.getChecklistItems();
+        checkboxListTileStateList = checklistItems
+            .map((e) => CheckboxListTileState(false, e.title, e.subtitle))
+            .toList();
+
         setState(() => ());
       },
       child: const Text('click here'),
