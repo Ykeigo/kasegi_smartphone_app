@@ -74,6 +74,15 @@ class _CheckboxListTileExampleState extends State<CheckboxListTileExample> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    Future(() async {
+      await reloadGameCheckItem();
+      setState(() {});
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     List<Widget> checkboxListTileWidgets = checkboxListTileStateList
         .map((e) => List<Widget>.from([
@@ -100,9 +109,10 @@ class _CheckboxListTileExampleState extends State<CheckboxListTileExample> {
         );
         logger.d("result: $result");
 
-        await widget.dbHelper
-            .insertChecklistItem(ChecklistItem(result.$1, result.$2));
-
+        if (result.$1.isNotEmpty) {
+          await widget.dbHelper
+              .insertChecklistItem(ChecklistItem(result.$1, result.$2));
+        }
         await reloadGameCheckItem();
         setState(() => ());
       },

@@ -1,31 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class AddGameCheckItemPage extends StatelessWidget {
-  const AddGameCheckItemPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text('KBOYのFlutter大学'),
-        ),
-        body: PopScope(
-          canPop: false,
-          onPopInvoked: (didPop) async {
-            if (didPop) {
-              return;
-            }
-            final NavigatorState navigator = Navigator.of(context);
-            navigator.pop(("hello", "world")); // 戻るを選択した場合のみpopを明示的に呼ぶ
-          },
-          child: Container(
-            color: Colors.red,
-          ),
-        ));
-  }
-}
-
 class TextFormFieldExample extends StatefulWidget {
   const TextFormFieldExample({super.key});
 
@@ -50,7 +25,11 @@ class _TextFormFieldExampleState extends State<TextFormFieldExample> {
               return;
             }
             final NavigatorState navigator = Navigator.of(context);
-            navigator.pop((title, subtitle)); // 戻るを選択した場合のみpopを明示的に呼ぶ
+
+            final doInterrupt = await _backButtonPress(context);
+            if (doInterrupt) {
+              navigator.pop(("", "")); // 戻るを選択した場合のみpopを明示的に呼ぶ
+            }
           },
           child: Center(
             child: Shortcuts(
@@ -87,11 +66,49 @@ class _TextFormFieldExampleState extends State<TextFormFieldExample> {
                         },
                       ),
                     ),
-                  )
+                  ),
+                  Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints.tight(const Size(200, 50)),
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final NavigatorState navigator =
+                                Navigator.of(context);
+                            navigator.pop(
+                                (title, subtitle)); // 戻るを選択した場合のみpopを明示的に呼ぶ
+                          },
+                          child: const Text('作成'),
+                        ),
+                      ))
                 ]),
               ),
             ),
           ),
         ));
   }
+}
+
+Future<bool> _backButtonPress(BuildContext context) async {
+  bool? answer = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('チェック項目の追加を中止しますか？\n入力内容は破棄されます。'),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: const Text('いいえ')),
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+                child: const Text('はい'))
+          ],
+        );
+      });
+
+  return answer ?? false;
 }
