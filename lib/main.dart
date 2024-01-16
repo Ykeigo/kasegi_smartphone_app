@@ -64,14 +64,14 @@ class CheckboxListTileState {
 }
 
 class _CheckboxListTileExampleState extends State<CheckboxListTileExample> {
-  List<CheckboxListTileState> checkboxListTileStateList = [
-    CheckboxListTileState(false, "Headline", "Supporting text"),
-    CheckboxListTileState(false, "ヘッドライン", "サポーティングテキスト"),
-    CheckboxListTileState(false, "Headline",
-        "Longer supporting text to demonstrate how the text wraps and the checkbox is centered vertically with the text."),
-    CheckboxListTileState(false, "Headline",
-        "Longer supporting text to demonstrate how the text wraps and how setting 'CheckboxListTile.isThreeLine = true' aligns the checkbox to the top vertically with the text."),
-  ];
+  List<CheckboxListTileState> checkboxListTileStateList = [];
+
+  Future<void> reloadGameCheckItem() async {
+    final checklistItems = await widget.dbHelper.getChecklistItems();
+    checkboxListTileStateList = checklistItems
+        .map((e) => CheckboxListTileState(false, e.title, e.subtitle))
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,15 +100,10 @@ class _CheckboxListTileExampleState extends State<CheckboxListTileExample> {
         );
         logger.d("result: $result");
 
-        debugPrint('debugger breakpoint here');
-
         await widget.dbHelper
             .insertChecklistItem(ChecklistItem(result.$1, result.$2));
-        final checklistItems = await widget.dbHelper.getChecklistItems();
-        checkboxListTileStateList = checklistItems
-            .map((e) => CheckboxListTileState(false, e.title, e.subtitle))
-            .toList();
 
+        await reloadGameCheckItem();
         setState(() => ());
       },
       child: const Text('click here'),
