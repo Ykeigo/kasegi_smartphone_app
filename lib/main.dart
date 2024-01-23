@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/add_game_checklist_item_page.dart';
+import 'package:flutter_application_1/add_game_checklist_page.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart';
 import 'package:get/get.dart';
@@ -105,9 +106,10 @@ class _CheckboxListTileExampleState extends State<CheckboxListTileExample> {
 
     checkboxListTileWidgets.add(ElevatedButton(
       onPressed: () async {
+        logger.d(context);
         (String, String) result = await Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const TextFormFieldExample()),
+          MaterialPageRoute(builder: (context) => const AddChecklistItemPage()),
         );
         logger.d("result: $result");
 
@@ -128,8 +130,29 @@ class _CheckboxListTileExampleState extends State<CheckboxListTileExample> {
   }
 }
 
-class MyMenuBar extends StatelessWidget {
+class MyMenuBar extends StatefulWidget {
   const MyMenuBar({super.key});
+
+  @override
+  State<MyMenuBar> createState() => _MyMenuBarState();
+}
+
+class _MyMenuBarState extends State<MyMenuBar> {
+  Widget addGameChecklistButton(BuildContext context) {
+    logger.d(context);
+    return MenuItemButton(
+      onPressed: () async {
+        logger.d(context);
+        logger.d(Navigator);
+        (String, String) result = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AddGameChecklistPage()),
+        );
+        logger.d("result: $result");
+      },
+      child: const Text("練習メニューを作成"),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -142,18 +165,7 @@ class MyMenuBar extends StatelessWidget {
               child: MenuBar(
                 children: <Widget>[
                   SubmenuButton(
-                    menuChildren: <Widget>[
-                      MenuItemButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Saved!'),
-                            ),
-                          );
-                        },
-                        child: const Text("練習メニューを作成"),
-                      )
-                    ],
+                    menuChildren: <Widget>[addGameChecklistButton(context)],
                     child: const Icon(Icons.menu),
                   )
                 ],

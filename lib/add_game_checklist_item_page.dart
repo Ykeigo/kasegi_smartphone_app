@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-class TextFormFieldExample extends StatefulWidget {
-  const TextFormFieldExample({super.key});
+class AddChecklistItemPage extends StatefulWidget {
+  const AddChecklistItemPage({super.key});
 
   @override
-  State<TextFormFieldExample> createState() => _TextFormFieldExampleState();
+  State<AddChecklistItemPage> createState() => _AddChecklistItemPageState();
 }
 
-class _TextFormFieldExampleState extends State<TextFormFieldExample> {
+class _AddChecklistItemPageState extends State<AddChecklistItemPage> {
   var title = "";
   var subtitle = "";
 
