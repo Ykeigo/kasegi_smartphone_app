@@ -7,12 +7,14 @@ import 'package:logger/logger.dart';
 import 'package:path/path.dart';
 import 'package:get/get.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
 import 'package:flutter_application_1/db_helper.dart';
 
 /// Flutter code sample for [CheckboxListTile].
 
 const Duration timeLimit = Duration(seconds: 5);
+const double toolbarHeight = 100.0;
 
 final logger = Logger();
 
@@ -43,15 +45,14 @@ class CheckboxListTileApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       theme: ThemeData(useMaterial3: true),
-      home: SafeArea(
-          child: CheckboxListTileExample(key: super.key, dbHelper: DbHelper())),
+      home: SafeArea(child: CheckboxListTileExample(key: super.key)),
     );
   }
 }
 
 class CheckboxListTileExample extends StatefulWidget {
-  final DbHelper dbHelper;
-  const CheckboxListTileExample({super.key, required this.dbHelper});
+  final DbHelper dbHelper = DbHelper();
+  CheckboxListTileExample({super.key});
 
   @override
   State<CheckboxListTileExample> createState() =>
@@ -74,6 +75,37 @@ class _CheckboxListTileExampleState extends State<CheckboxListTileExample> {
     checkboxListTileStateList = checklistItems
         .map((e) => CheckboxListTileState(false, e.title, e.subtitle))
         .toList();
+  }
+
+  SpeedDial myFloatingActionButton(BuildContext context) {
+    return SpeedDial(
+      curve: Curves.bounceIn,
+      children: [
+        SpeedDialChild(
+            child: const Icon(Icons.create),
+            backgroundColor: Colors.blue,
+            label: "グループを作成する",
+            onTap: () async {
+              logger.d(context);
+              logger.d(Navigator);
+              String result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const AddGameChecklistPage()),
+              );
+              logger.d("result: $result");
+              await widget.dbHelper
+                  .insertGameChecklist(GameChecklist(0, result));
+              final games = await widget.dbHelper.getGameChecklists();
+              for (var game in games) {
+                logger.d(game.name);
+              }
+            },
+            labelStyle: const TextStyle(fontWeight: FontWeight.w500)),
+      ],
+      activeIcon: Icons.close,
+      child: const Icon(Icons.add),
+    );
   }
 
   @override
@@ -115,65 +147,49 @@ class _CheckboxListTileExampleState extends State<CheckboxListTileExample> {
 
         if (result.$1.isNotEmpty) {
           await widget.dbHelper.insertGameChecklistItem(
-              ChecklistItem(0 /*デバッグ用に適当な値を入れています*/, result.$1, result.$2));
+              ChecklistItem(0, 0 /*デバッグ用に適当な値を入れています*/, result.$1, result.$2));
         }
         await reloadGameCheckItem();
         setState(() => ());
       },
       child: const Text('click here'),
     ));
-    return Scaffold(
-        body: Column(children: [
-      const MyMenuBar(),
-      Column(children: checkboxListTileWidgets)
-    ]));
+    return DefaultTabController(
+        length: 3, //タブの数
+        child: Scaffold(
+            appBar: MyMenuBar(),
+            body: TabBarView(
+              children: [
+                Column(children: checkboxListTileWidgets),
+                Icon(Icons.note),
+                Icon(Icons.settings)
+              ],
+            ),
+            floatingActionButton: myFloatingActionButton(context)));
   }
 }
 
-class MyMenuBar extends StatefulWidget {
-  const MyMenuBar({super.key});
+class MyMenuBar extends StatefulWidget implements PreferredSizeWidget {
+  final DbHelper dbHelper = DbHelper();
+  MyMenuBar({super.key});
 
   @override
   State<MyMenuBar> createState() => _MyMenuBarState();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(toolbarHeight);
 }
 
 class _MyMenuBarState extends State<MyMenuBar> {
-  Widget addGameChecklistButton(BuildContext context) {
-    logger.d(context);
-    return MenuItemButton(
-      onPressed: () async {
-        logger.d(context);
-        logger.d(Navigator);
-        (String, String) result = await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const AddGameChecklistPage()),
-        );
-        logger.d("result: $result");
-      },
-      child: const Text("練習メニューを作成"),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Expanded(
-              child: MenuBar(
-                children: <Widget>[
-                  SubmenuButton(
-                    menuChildren: <Widget>[addGameChecklistButton(context)],
-                    child: const Icon(Icons.menu),
-                  )
-                ],
-              ),
-            ),
-          ],
-        )
-      ],
+    return AppBar(
+      title: const Center(child: Text('練習メニュー')),
+      bottom: TabBar(tabs: [
+        Icon(Icons.calendar_today),
+        Icon(Icons.note),
+        Icon(Icons.settings)
+      ]),
     );
   }
 }
