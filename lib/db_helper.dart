@@ -4,8 +4,9 @@ import 'package:path/path.dart';
 class ChecklistItem {
   String title = "";
   String subtitle = "";
+  int gameChecklistId = 0;
 
-  ChecklistItem(this.title, this.subtitle);
+  ChecklistItem(this.gameChecklistId, this.title, this.subtitle);
 }
 
 class DbHelper {
@@ -23,42 +24,54 @@ class DbHelper {
 
   Future<Database> initDB() async {
     String path = join(await getDatabasesPath(), 'kasegi_database.db');
+    await deleteDatabase(path);
     return await openDatabase(
       path,
       version: 1,
       onCreate: (db, version) async {
-        //存在確認
-        final List<Map<String, dynamic>> tables =
-            await db.rawQuery("SHOW TABLES LIKE 'checklist_items'");
-        if (tables.isEmpty) {
-          //作成
-          await db.execute('''
-          CREATE TABLE IF NOT EXISTS checklist_items (
+        //全部消す（デバッグ用）
+        await db.execute("DROP TABLE IF EXISTS game_checklist");
+        await db.execute("DROP TABLE IF EXISTS checklist_items");
+
+        //作成
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS game_checklist (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL
+          )
+          ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS game_checklist_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            game_checklist_id INTEGER NOT NULL,
             title TEXT NOT NULL,
             subtitle TEXT NOT NULL
           )
           ''');
-        }
       },
     );
   }
 
-  Future<void> insertChecklistItem(ChecklistItem checklistItem) async {
+  Future<void> insertGameChecklistItem(ChecklistItem checklistItem) async {
     final db = await database;
     await db.insert(
-      'checklist_items',
-      {"title": checklistItem.title, "subtitle": checklistItem.subtitle},
+      'game_checklist_items',
+      {
+        "game_checklist_id": checklistItem.gameChecklistId,
+        "title": checklistItem.title,
+        "subtitle": checklistItem.subtitle
+      },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  Future<List<ChecklistItem>> getChecklistItems() async {
+  Future<List<ChecklistItem>> getGameChecklistItems() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db
-        .rawQuery('SELECT * FROM checklist_items'); //.query('checklist_items');
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+        'SELECT * FROM game_checklist_items'); //.query('checklist_items');
     return List.generate(maps.length, (i) {
       return ChecklistItem(
+        maps[i]['game_checklist_id'],
         maps[i]['title'],
         maps[i]['subtitle'],
       );

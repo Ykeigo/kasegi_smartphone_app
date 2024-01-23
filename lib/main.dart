@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/add_game_check_item_page.dart';
+import 'package:flutter_application_1/add_game_checklist_item_page.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart';
+import 'package:get/get.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:flutter_application_1/db_helper.dart';
@@ -39,9 +40,10 @@ class CheckboxListTileApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       theme: ThemeData(useMaterial3: true),
-      home: CheckboxListTileExample(key: super.key, dbHelper: DbHelper()),
+      home: SafeArea(
+          child: CheckboxListTileExample(key: super.key, dbHelper: DbHelper())),
     );
   }
 }
@@ -67,7 +69,7 @@ class _CheckboxListTileExampleState extends State<CheckboxListTileExample> {
   List<CheckboxListTileState> checkboxListTileStateList = [];
 
   Future<void> reloadGameCheckItem() async {
-    final checklistItems = await widget.dbHelper.getChecklistItems();
+    final checklistItems = await widget.dbHelper.getGameChecklistItems();
     checkboxListTileStateList = checklistItems
         .map((e) => CheckboxListTileState(false, e.title, e.subtitle))
         .toList();
@@ -105,13 +107,13 @@ class _CheckboxListTileExampleState extends State<CheckboxListTileExample> {
       onPressed: () async {
         (String, String) result = await Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => TextFormFieldExample()),
+          MaterialPageRoute(builder: (context) => const TextFormFieldExample()),
         );
         logger.d("result: $result");
 
         if (result.$1.isNotEmpty) {
-          await widget.dbHelper
-              .insertChecklistItem(ChecklistItem(result.$1, result.$2));
+          await widget.dbHelper.insertGameChecklistItem(
+              ChecklistItem(0 /*デバッグ用に適当な値を入れています*/, result.$1, result.$2));
         }
         await reloadGameCheckItem();
         setState(() => ());
@@ -119,7 +121,47 @@ class _CheckboxListTileExampleState extends State<CheckboxListTileExample> {
       child: const Text('click here'),
     ));
     return Scaffold(
-        appBar: AppBar(title: const Text('CheckboxListTile Sample')),
-        body: Column(children: checkboxListTileWidgets));
+        body: Column(children: [
+      const MyMenuBar(),
+      Column(children: checkboxListTileWidgets)
+    ]));
+  }
+}
+
+class MyMenuBar extends StatelessWidget {
+  const MyMenuBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Expanded(
+              child: MenuBar(
+                children: <Widget>[
+                  SubmenuButton(
+                    menuChildren: <Widget>[
+                      MenuItemButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Saved!'),
+                            ),
+                          );
+                        },
+                        child: const Text("練習メニューを作成"),
+                      )
+                    ],
+                    child: const Icon(Icons.menu),
+                  )
+                ],
+              ),
+            ),
+          ],
+        )
+      ],
+    );
   }
 }

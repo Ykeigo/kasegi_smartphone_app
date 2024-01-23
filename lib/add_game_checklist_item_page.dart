@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 
 class TextFormFieldExample extends StatefulWidget {
   const TextFormFieldExample({super.key});
@@ -11,6 +12,19 @@ class TextFormFieldExample extends StatefulWidget {
 class _TextFormFieldExampleState extends State<TextFormFieldExample> {
   var title = "";
   var subtitle = "";
+
+  void openSnackbar() {
+    Get.snackbar(
+      '項目名が入力されていません',
+      '項目名を入力してください',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 3),
+      backgroundColor: Colors.black,
+      colorText: Colors.white,
+      borderRadius: 0,
+      margin: const EdgeInsets.all(0),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +62,9 @@ class _TextFormFieldExampleState extends State<TextFormFieldExample> {
                     child: ConstrainedBox(
                       constraints: BoxConstraints.tight(const Size(200, 50)),
                       child: TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: '項目名',
+                        ),
                         onSaved: (String? value) {
                           title = value.toString();
                           debugPrint('Value for title saved as "$value"');
@@ -60,6 +77,9 @@ class _TextFormFieldExampleState extends State<TextFormFieldExample> {
                     child: ConstrainedBox(
                       constraints: BoxConstraints.tight(const Size(200, 50)),
                       child: TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: '説明',
+                        ),
                         onSaved: (String? value) {
                           subtitle = value.toString();
                           debugPrint('Value for subtitle saved as "$value"');
@@ -75,8 +95,15 @@ class _TextFormFieldExampleState extends State<TextFormFieldExample> {
                           onPressed: () async {
                             final NavigatorState navigator =
                                 Navigator.of(context);
-                            navigator.pop(
-                                (title, subtitle)); // 戻るを選択した場合のみpopを明示的に呼ぶ
+                            if (title.isEmpty) {
+                              //snackbarが表示されていなければ表示する
+                              if (!Get.isSnackbarOpen) {
+                                openSnackbar();
+                              }
+                            } else {
+                              navigator.pop(
+                                  (title, subtitle)); // 戻るを選択した場合のみpopを明示的に呼ぶ
+                            }
                           },
                           child: const Text('作成'),
                         ),
