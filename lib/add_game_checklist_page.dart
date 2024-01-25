@@ -13,7 +13,7 @@ class _AddGameChecklistPageState extends State<AddGameChecklistPage> {
 
   void openSnackbar() {
     Get.snackbar(
-      '練習メニューの名前が入力されていません',
+      'ゲーム名が入力されていません',
       '名前を入力してください',
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 3),
@@ -29,7 +29,7 @@ class _AddGameChecklistPageState extends State<AddGameChecklistPage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('練習メニューの追加を中止しますか？\n入力内容は破棄されます。'),
+            title: const Text('ゲームの追加を中止しますか？\n入力内容は破棄されます。'),
             actions: [
               TextButton(
                   onPressed: () {
@@ -52,7 +52,7 @@ class _AddGameChecklistPageState extends State<AddGameChecklistPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('チェック項目の追加'),
+        title: const Text('ゲームの追加'),
       ),
       body: PopScope(
         canPop: false,
@@ -80,7 +80,7 @@ class _AddGameChecklistPageState extends State<AddGameChecklistPage> {
                   constraints: BoxConstraints.tight(const Size(200, 50)),
                   child: TextFormField(
                     decoration: const InputDecoration(
-                      labelText: '練習メニューの名前',
+                      labelText: 'ゲーム名',
                     ),
                     onSaved: (String? value) {
                       name = value.toString();
