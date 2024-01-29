@@ -81,8 +81,6 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: Schyler
-      fonts:
     - family: MPLUS_Rounded_1c
       fonts:
         - asset: assets/fonts/M_PLUS_Rounded_1c/MPLUSRounded1c-Thin.ttf

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db_helper.dart';
 import 'package:flutter_application_1/add_game_checklist_item_page.dart';
-import 'package:flutter_application_1/floating_button.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:flutter_application_1/add_game_checklist_page.dart';
+import 'package:logger/logger.dart';
+
+final logger = Logger();
 
 const double toolbarHeight = 100.0;
 
@@ -18,26 +22,72 @@ class ChecklistPage extends StatefulWidget {
   ChecklistPage({super.key});
 
   @override
-  State<ChecklistPage> createState() => _CheckboxListTileExampleState();
+  State<ChecklistPage> createState() => _ChecklistPageState();
 }
 
-class _CheckboxListTileExampleState extends State<ChecklistPage> {
+class _ChecklistPageState extends State<ChecklistPage> {
+  List<GameChecklist> gameChecklists = [];
   List<CheckboxListTileState> checkboxListTileStateList = [];
 
-  Future<void> reloadGameCheckItem() async {
+  Future<void> reloadGameChecklistItem() async {
     final checklistItems = await widget.dbHelper.getGameChecklistItems();
     checkboxListTileStateList = checklistItems
         .map((e) => CheckboxListTileState(false, e.title, e.subtitle))
         .toList();
   }
 
+  Future<void> reloadGameChecklist() async {
+    gameChecklists = await widget.dbHelper.getGameChecklists();
+  }
+
   @override
   void initState() {
     super.initState();
     Future(() async {
-      await reloadGameCheckItem();
+      await reloadGameChecklist();
+      await reloadGameChecklistItem();
       setState(() {});
     });
+  }
+
+  SpeedDial myFloatingActionButton(BuildContext context) {
+    return SpeedDial(
+      curve: Curves.bounceIn,
+      children: [
+        SpeedDialChild(
+            child: const Icon(Icons.create),
+            backgroundColor: Colors.blue,
+            label: "ゲームを追加する",
+            onTap: () async {
+              final gameTitleToAdd = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const AddGameChecklistPage()),
+              );
+
+              await widget.dbHelper
+                  .insertGameChecklist(GameChecklist(0, gameTitleToAdd));
+              final a = await widget.dbHelper.getGameChecklists();
+              logger.d(a);
+
+              await reloadGameChecklist();
+
+              setState(() => ());
+            },
+            labelStyle: const TextStyle(fontWeight: FontWeight.w500)),
+      ],
+      activeIcon: Icons.close,
+      child: const Icon(Icons.add),
+    );
+  }
+
+  PreferredSizeWidget _myMenuBar(List<GameChecklist> gameChecklists) {
+    return AppBar(
+      title: const Center(child: Text('練習メニュー')),
+      bottom: TabBar(
+        tabs: gameChecklists.map((e) => Tab(text: e.name)).toList(),
+      ),
+    );
   }
 
   @override
@@ -61,58 +111,28 @@ class _CheckboxListTileExampleState extends State<ChecklistPage> {
 
     checkboxListTileWidgets.add(ElevatedButton(
       onPressed: () async {
-        logger.d(context);
         (String, String) result = await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const AddChecklistItemPage()),
         );
-        logger.d("result: $result");
 
         if (result.$1.isNotEmpty) {
           await widget.dbHelper.insertGameChecklistItem(
               ChecklistItem(0, 0 /*デバッグ用に適当な値を入れています*/, result.$1, result.$2));
         }
-        await reloadGameCheckItem();
+        await reloadGameChecklistItem();
         setState(() => ());
       },
       child: const Text('click here'),
     ));
     return DefaultTabController(
-        length: 3, //タブの数
+        length: gameChecklists.length, //タブの数
         child: Scaffold(
-            appBar: MyMenuBar(),
+            appBar: _myMenuBar(gameChecklists),
             body: TabBarView(
-              children: [
-                Column(children: checkboxListTileWidgets),
-                Icon(Icons.note),
-                Icon(Icons.settings)
-              ],
-            ),
-            floatingActionButton: MyFloatingActionButton()));
-  }
-}
-
-class MyMenuBar extends StatefulWidget implements PreferredSizeWidget {
-  final DbHelper dbHelper = DbHelper();
-  MyMenuBar({super.key});
-
-  @override
-  State<MyMenuBar> createState() => _MyMenuBarState();
-
-  @override
-  Size get preferredSize => const Size.fromHeight(toolbarHeight);
-}
-
-class _MyMenuBarState extends State<MyMenuBar> {
-  @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      title: const Center(child: Text('練習メニュー')),
-      bottom: TabBar(tabs: [
-        Icon(Icons.calendar_today),
-        Icon(Icons.note),
-        Icon(Icons.settings)
-      ]),
-    );
+                children: gameChecklists
+                    .map((_) => Column(children: checkboxListTileWidgets))
+                    .toList()),
+            floatingActionButton: myFloatingActionButton(context)));
   }
 }
