@@ -32,7 +32,7 @@ class DbHelper {
 
   Future<Database> initDB() async {
     String path = join(await getDatabasesPath(), 'kasegi_database.db');
-    await deleteDatabase(path);
+    //await deleteDatabase(path);
     return await openDatabase(
       path,
       version: 1,

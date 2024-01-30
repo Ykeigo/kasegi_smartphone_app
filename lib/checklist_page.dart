@@ -4,6 +4,7 @@ import 'package:flutter_application_1/add_game_checklist_item_page.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:flutter_application_1/add_game_checklist_page.dart';
 import 'package:logger/logger.dart';
+import 'package:collection/collection.dart';
 
 final logger = Logger();
 
@@ -27,13 +28,18 @@ class ChecklistPage extends StatefulWidget {
 
 class _ChecklistPageState extends State<ChecklistPage> {
   List<GameChecklist> gameChecklists = [];
-  List<CheckboxListTileState> checkboxListTileStateList = [];
+  Map<int, List<CheckboxListTileState>> checkboxListTileStateList = {};
 
   Future<void> reloadGameChecklistItem() async {
     final checklistItems = await widget.dbHelper.getGameChecklistItems();
     checkboxListTileStateList = checklistItems
-        .map((e) => CheckboxListTileState(false, e.title, e.subtitle))
-        .toList();
+        .groupListsBy((e) => e.gameChecklistId)
+        .map((key, checkItems) => MapEntry(
+            key,
+            checkItems
+                .map((item) =>
+                    CheckboxListTileState(false, item.title, item.subtitle))
+                .toList()));
   }
 
   Future<void> reloadGameChecklist() async {
@@ -92,25 +98,29 @@ class _ChecklistPageState extends State<ChecklistPage> {
         ));
   }
 
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> checkboxListTileWidgets = checkboxListTileStateList
-        .map((e) => List<Widget>.from([
-              CheckboxListTile(
-                value: e.checkboxValue,
-                onChanged: (bool? value) {
-                  setState(() {
-                    e.checkboxValue = value!;
-                  });
-                },
-                title: Text(e.title),
-                subtitle: Text(e.subtitle),
-              ),
-              const Divider(height: 0)
-            ]))
-        .expand((element) => element)
-        .toList();
-
+  Widget _myCheckItemsWidget(int gameChecklistId) {
+    final checkitemAndStates = checkboxListTileStateList[gameChecklistId];
+    List<Widget> checkboxListTileWidgets;
+    if (checkitemAndStates == null) {
+      checkboxListTileWidgets = [const Text("Loading...")];
+    } else {
+      checkboxListTileWidgets = checkitemAndStates
+          .map((e) => List<Widget>.from([
+                CheckboxListTile(
+                  value: e.checkboxValue,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      e.checkboxValue = value!;
+                    });
+                  },
+                  title: Text(e.title),
+                  subtitle: Text(e.subtitle),
+                ),
+                const Divider(height: 0)
+              ]))
+          .expand((element) => element)
+          .toList();
+    }
     checkboxListTileWidgets.add(ElevatedButton(
       onPressed: () async {
         (String, String) result = await Navigator.push(
@@ -119,22 +129,52 @@ class _ChecklistPageState extends State<ChecklistPage> {
         );
 
         if (result.$1.isNotEmpty) {
-          await widget.dbHelper.insertGameChecklistItem(
-              ChecklistItem(0, 0 /*デバッグ用に適当な値を入れています*/, result.$1, result.$2));
+          await widget.dbHelper.insertGameChecklistItem(ChecklistItem(
+              0 /*ignored*/, gameChecklistId, result.$1, result.$2));
         }
         await reloadGameChecklistItem();
         setState(() => ());
       },
-      child: const Text('click here'),
+      child: const Text('チェック項目を追加'),
     ));
+    return Column(children: checkboxListTileWidgets);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return DefaultTabController(
         length: gameChecklists.length, //タブの数
         child: Scaffold(
             appBar: _myMenuBar(gameChecklists),
-            body: TabBarView(
-                children: gameChecklists
-                    .map((_) => Column(children: checkboxListTileWidgets))
-                    .toList()),
+            body: Stack(alignment: Alignment.topCenter, children: <Widget>[
+              TabBarView(
+                  children: gameChecklists
+                      .map((gameChecklist) =>
+                          _myCheckItemsWidget(gameChecklist.id))
+                      .toList()),
+              Positioned(
+                bottom: 10.0,
+                width: 110.0,
+                height: 110.0,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    //foregroundColor: Colors.black,
+                    shape: const CircleBorder(
+                      side: BorderSide(
+                        color: Colors.black,
+                        width: 1,
+                        style: BorderStyle.solid,
+                      ),
+                    ),
+                  ),
+                  child: const Text('開始！',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                  onPressed: () {},
+                ),
+              ),
+            ]),
             floatingActionButton: myFloatingActionButton(context)));
   }
 }
