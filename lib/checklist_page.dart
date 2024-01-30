@@ -83,11 +83,13 @@ class _ChecklistPageState extends State<ChecklistPage> {
 
   PreferredSizeWidget _myMenuBar(List<GameChecklist> gameChecklists) {
     return AppBar(
-      title: const Center(child: Text('練習メニュー')),
-      bottom: TabBar(
-        tabs: gameChecklists.map((e) => Tab(text: e.name)).toList(),
-      ),
-    );
+        title: Text('練習メニュー'),
+        bottom: TabBar(
+          tabAlignment: TabAlignment.center,
+          isScrollable: true,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 10),
+          tabs: gameChecklists.map((e) => Tab(text: e.name)).toList(),
+        ));
   }
 
   @override
