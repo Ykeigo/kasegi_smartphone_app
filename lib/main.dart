@@ -8,8 +8,6 @@ import 'package:sqflite/sqflite.dart';
 
 import 'package:flutter_application_1/checklist_page.dart';
 
-/// Flutter code sample for [CheckboxListTile].
-
 const Duration timeLimit = Duration(seconds: 5);
 
 final logger = Logger();
@@ -39,6 +37,7 @@ class CheckboxListTileApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //getxはスナックバーのために必要
     return GetMaterialApp(
       theme: ThemeData(useMaterial3: true, fontFamily: "MPLUS_Rounded_1c"),
       home: SafeArea(child: ChecklistPage(key: super.key)),
