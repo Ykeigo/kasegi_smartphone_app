@@ -17,6 +17,25 @@ class GameChecklist {
   GameChecklist(this.id, this.name);
 }
 
+class MatchChecklistItem {
+  int id = 0;
+  String title = "";
+  String subtitle = "";
+  int matchId = 0;
+
+  MatchChecklistItem(this.id, this.matchId, this.title, this.subtitle);
+}
+
+class Match {
+  int id = 0;
+  int gameChecklistId = 0;
+  String createdAt = "";
+  List<MatchChecklistItem> matchChecklistItems = [];
+
+  Match(
+      this.id, this.gameChecklistId, this.createdAt, this.matchChecklistItems);
+}
+
 class DbHelper {
   DbHelper() {
     initDB();
@@ -52,6 +71,21 @@ class DbHelper {
           CREATE TABLE IF NOT EXISTS game_checklist_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             game_checklist_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            subtitle TEXT NOT NULL
+          )
+          ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS matches (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            game_checklist_id INTEGER NOT NULL,
+            created_at TEXT NOT NULL
+          )
+          ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS match_checklist_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            match_id INTEGER NOT NULL,
             title TEXT NOT NULL,
             subtitle TEXT NOT NULL
           )
@@ -109,6 +143,49 @@ class DbHelper {
         maps[i]['id'],
         maps[i]['name'],
       );
+    });
+  }
+
+  ///渡されたMatchをinsertします。idは無視されます。
+  Future<void> insertMatch(Match match) async {
+    final db = await database;
+    await db.insert(
+      'matches',
+      {
+        "game_checklist_id": match.gameChecklistId,
+        "created_at": match.createdAt,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    for (var item in match.matchChecklistItems) {
+      await db.insert(
+        'match_checklist_items',
+        {
+          "match_id": match.id,
+          "title": item.title,
+          "subtitle": item.subtitle,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+  }
+
+  Future<List<Match>> getMatch() async {
+    final db = await database;
+    final List<Map<String, dynamic>> matchMaps =
+        await db.rawQuery('SELECT * FROM matches');
+    final List<Map<String, dynamic>> matchChecklistMaps =
+        await db.rawQuery('SELECT * FROM matches');
+    return List.generate(matchMaps.length, (i) {
+      return Match(
+          matchMaps[i]['id'],
+          matchMaps[i]['game_checklist_id'],
+          matchMaps[i]['created_at'],
+          matchChecklistMaps
+              .where((element) => element['match_id'] == matchMaps[i]['id'])
+              .map((e) => MatchChecklistItem(
+                  e['id'], e['match_id'], e['title'], e['subtitle']))
+              .toList());
     });
   }
 }

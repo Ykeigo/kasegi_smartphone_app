@@ -140,6 +140,10 @@ class _ChecklistPageState extends State<ChecklistPage> {
           .expand((element) => element)
           .toList();
     }
+    if (inGameStatus == InGameStatus.preGame) {
+      checkboxListTileWidgets
+          .insertAll(0, [const Text("終了時にチェックできます"), const Divider(height: 0)]);
+    }
     checkboxListTileWidgets.add(ElevatedButton(
       onPressed: () async {
         (String, String) result = await Navigator.push(
@@ -159,7 +163,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
     return Column(children: checkboxListTileWidgets);
   }
 
-  Widget gameStartusChangeButton() {
+  Widget gameStartusChangeButton(int gameChecklistId) {
     String buttonText = '';
     if (inGameStatus == InGameStatus.preGame) {
       buttonText = '開始！';
@@ -191,7 +195,8 @@ class _ChecklistPageState extends State<ChecklistPage> {
               else if (inGameStatus == InGameStatus.postGame)
                 {
                   // チェック状況を記録する
-
+                  widget.dbHelper.insertMatch(
+                      Match(0 /*ignored*/, 0, DateTime.now().toString(), [])),
                   // 記録しましたというスナックバーを表示
                   openSnackbar(),
                   // すべてのチェックボックスをfalseに戻す
@@ -214,15 +219,15 @@ class _ChecklistPageState extends State<ChecklistPage> {
     List<Widget> stacking = [
       Scaffold(
           appBar: _myMenuBar(gameChecklists),
-          body: Stack(alignment: Alignment.topCenter, children: <Widget>[
-            TabBarView(
-                children: gameChecklists
-                    .map((gameChecklist) => _myCheckItemsWidget(
-                        gameChecklist.id,
-                        inGameStatus == InGameStatus.postGame))
-                    .toList()),
-            gameStartusChangeButton()
-          ]),
+          body: TabBarView(
+              children: gameChecklists
+                  .map((gameChecklist) =>
+                      Stack(alignment: Alignment.topCenter, children: <Widget>[
+                        _myCheckItemsWidget(gameChecklist.id,
+                            inGameStatus == InGameStatus.postGame),
+                        gameStartusChangeButton(gameChecklist.id)
+                      ]))
+                  .toList()),
           floatingActionButton: myFloatingActionButton(context)),
     ];
 
