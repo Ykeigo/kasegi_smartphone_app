@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db_helper.dart';
 import 'package:flutter_application_1/add_game_checklist_item_page.dart';
+import 'package:flutter_application_1/main.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:flutter_application_1/add_game_checklist_page.dart';
-import 'package:logger/logger.dart';
 import 'package:collection/collection.dart';
 import 'package:get/get.dart';
+import 'package:flutter_application_1/see_history_page.dart';
+import 'package:logger/logger.dart';
 
-final logger = Logger();
+final _logger = Logger();
 
 enum InGameStatus { preGame, inGame, postGame }
 
@@ -91,7 +93,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
               await widget.dbHelper
                   .insertGameChecklist(GameChecklist(0, gameTitleToAdd));
               final a = await widget.dbHelper.getGameChecklists();
-              logger.d(a);
+              _logger.d(a);
 
               await reloadGameChecklist();
 
@@ -106,7 +108,18 @@ class _ChecklistPageState extends State<ChecklistPage> {
 
   PreferredSizeWidget _myMenuBar(List<GameChecklist> gameChecklists) {
     return AppBar(
-        title: Text('練習メニュー'),
+        title: const Text('練習メニュー', style: TextStyle(fontSize: 30)),
+        actions: <Widget>[
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SeeHistoryPage()),
+              );
+            },
+            icon: const Icon(Icons.equalizer),
+          )
+        ],
         bottom: TabBar(
           tabAlignment: TabAlignment.center,
           isScrollable: true,
@@ -139,10 +152,16 @@ class _ChecklistPageState extends State<ChecklistPage> {
               ]))
           .expand((element) => element)
           .toList();
-    }
-    if (inGameStatus == InGameStatus.preGame) {
-      checkboxListTileWidgets
-          .insertAll(0, [const Text("終了時にチェックできます"), const Divider(height: 0)]);
+      if (inGameStatus == InGameStatus.preGame) {
+        checkboxListTileWidgets.insertAll(0, [
+          const Text(
+            "終了時にチェックしてください。",
+            style:
+                TextStyle(fontSize: 15, color: Color.fromARGB(255, 80, 80, 80)),
+          ),
+          const Divider(height: 0)
+        ]);
+      }
     }
     checkboxListTileWidgets.add(ElevatedButton(
       onPressed: () async {
@@ -194,9 +213,18 @@ class _ChecklistPageState extends State<ChecklistPage> {
                 {inGameStatus = InGameStatus.inGame}
               else if (inGameStatus == InGameStatus.postGame)
                 {
+                  logger.d(checkboxListTileStateList[gameChecklistId]!
+                      .map((e) => e.checkboxValue)),
+
                   // チェック状況を記録する
-                  widget.dbHelper.insertMatch(
-                      Match(0 /*ignored*/, 0, DateTime.now().toString(), [])),
+                  widget.dbHelper.insertMatch(Match(
+                      0 /*ignored*/,
+                      gameChecklistId,
+                      "" /*ignored*/,
+                      checkboxListTileStateList[gameChecklistId]!
+                          .map((e) => MatchChecklistItem(
+                              0, 0, e.title, e.subtitle, e.checkboxValue))
+                          .toList())),
                   // 記録しましたというスナックバーを表示
                   openSnackbar(),
                   // すべてのチェックボックスをfalseに戻す
@@ -216,7 +244,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> stacking = [
+    List<Widget> displayedWidgets = [
       Scaffold(
           appBar: _myMenuBar(gameChecklists),
           body: TabBarView(
@@ -225,7 +253,9 @@ class _ChecklistPageState extends State<ChecklistPage> {
                       Stack(alignment: Alignment.topCenter, children: <Widget>[
                         _myCheckItemsWidget(gameChecklist.id,
                             inGameStatus == InGameStatus.postGame),
-                        gameStartusChangeButton(gameChecklist.id)
+                        checkboxListTileStateList[gameChecklist.id] != null
+                            ? gameStartusChangeButton(gameChecklist.id)
+                            : Container() // チェック項目がない場合はボタンを表示しない
                       ]))
                   .toList()),
           floatingActionButton: myFloatingActionButton(context)),
@@ -245,7 +275,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
         ),
       );
 
-      stacking.addAll([
+      displayedWidgets.addAll([
         const Opacity(
           opacity: 0.8,
           child: ModalBarrier(dismissible: false, color: Colors.black),
@@ -269,6 +299,6 @@ class _ChecklistPageState extends State<ChecklistPage> {
 
     return DefaultTabController(
         length: gameChecklists.length, //タブの数
-        child: Stack(children: stacking));
+        child: Stack(children: displayedWidgets));
   }
 }

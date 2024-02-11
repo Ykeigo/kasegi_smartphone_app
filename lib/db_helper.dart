@@ -1,3 +1,4 @@
+import 'package:flutter_application_1/main.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -22,8 +23,10 @@ class MatchChecklistItem {
   String title = "";
   String subtitle = "";
   int matchId = 0;
+  bool isChecked = false;
 
-  MatchChecklistItem(this.id, this.matchId, this.title, this.subtitle);
+  MatchChecklistItem(
+      this.id, this.matchId, this.title, this.subtitle, this.isChecked);
 }
 
 class Match {
@@ -56,10 +59,6 @@ class DbHelper {
       path,
       version: 1,
       onCreate: (db, version) async {
-        //全部消す（デバッグ用）
-        await db.execute("DROP TABLE IF EXISTS game_checklists");
-        await db.execute("DROP TABLE IF EXISTS checklist_items");
-
         //作成
         await db.execute('''
           CREATE TABLE IF NOT EXISTS game_checklists (
@@ -87,7 +86,8 @@ class DbHelper {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             match_id INTEGER NOT NULL,
             title TEXT NOT NULL,
-            subtitle TEXT NOT NULL
+            subtitle TEXT NOT NULL,
+            is_checked TEXT NOT NULL
           )
           ''');
       },
@@ -146,14 +146,14 @@ class DbHelper {
     });
   }
 
-  ///渡されたMatchをinsertします。idは無視されます。
+  ///渡されたMatchをinsertします。idとcreatedAtは無視されます。
   Future<void> insertMatch(Match match) async {
     final db = await database;
-    await db.insert(
+    final id = await db.insert(
       'matches',
       {
         "game_checklist_id": match.gameChecklistId,
-        "created_at": match.createdAt,
+        "created_at": DateTime.now().toString(),
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -161,9 +161,10 @@ class DbHelper {
       await db.insert(
         'match_checklist_items',
         {
-          "match_id": match.id,
+          "match_id": id,
           "title": item.title,
           "subtitle": item.subtitle,
+          "is_checked": item.isChecked.toString(),
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -175,7 +176,8 @@ class DbHelper {
     final List<Map<String, dynamic>> matchMaps =
         await db.rawQuery('SELECT * FROM matches');
     final List<Map<String, dynamic>> matchChecklistMaps =
-        await db.rawQuery('SELECT * FROM matches');
+        await db.rawQuery('SELECT * FROM match_checklist_items');
+
     return List.generate(matchMaps.length, (i) {
       return Match(
           matchMaps[i]['id'],
@@ -183,8 +185,8 @@ class DbHelper {
           matchMaps[i]['created_at'],
           matchChecklistMaps
               .where((element) => element['match_id'] == matchMaps[i]['id'])
-              .map((e) => MatchChecklistItem(
-                  e['id'], e['match_id'], e['title'], e['subtitle']))
+              .map((e) => MatchChecklistItem(e['id'], e['match_id'], e['title'],
+                  e['subtitle'], e['is_checked'] == "true"))
               .toList());
     });
   }
