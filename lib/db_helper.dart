@@ -59,6 +59,7 @@ class DbHelper {
       path,
       version: 1,
       onCreate: (db, version) async {
+        logger.d("Connection to yanagy's local DB created");
         //作成
         await db.execute('''
           CREATE TABLE IF NOT EXISTS game_checklists (

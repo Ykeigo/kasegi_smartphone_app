@@ -16,20 +16,7 @@ void main() async {
   // Avoid errors caused by flutter upgrade.
 // Importing 'package:flutter/widgets.dart' is required.
   WidgetsFlutterBinding.ensureInitialized();
-// Open the database and store the reference.
-  final database = openDatabase(
-    // Set the path to the database. Note: Using the `join` function from the
-    // `path` package is best practice to ensure the path is correctly
-    // constructed for each platform.
-    join(await getDatabasesPath(), 'kasegi_database.db'),
-  ).timeout(timeLimit,
-      onTimeout: () => throw TimeoutException(
-          "Failed to open database. Timeout after $timeLimit"));
-
-  database.then((database) {
-    logger.d("Connection to yanagy's local DB established");
-    runApp(const CheckboxListTileApp());
-  }, onError: (error, stackTrace) => logger.d(error));
+  runApp(const CheckboxListTileApp());
 }
 
 class CheckboxListTileApp extends StatelessWidget {
