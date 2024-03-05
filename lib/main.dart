@@ -2,11 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:path/path.dart';
 import 'package:get/get.dart';
-import 'package:sqflite/sqflite.dart';
 
 import 'package:flutter_application_1/checklist_page.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 const Duration timeLimit = Duration(seconds: 5);
 
@@ -16,6 +15,7 @@ void main() async {
   // Avoid errors caused by flutter upgrade.
 // Importing 'package:flutter/widgets.dart' is required.
   WidgetsFlutterBinding.ensureInitialized();
+  _initGoogleMobileAds();
   runApp(const CheckboxListTileApp());
 }
 
@@ -30,4 +30,9 @@ class CheckboxListTileApp extends StatelessWidget {
       home: SafeArea(child: ChecklistPage(key: super.key)),
     );
   }
+}
+
+Future<InitializationStatus> _initGoogleMobileAds() {
+  // TODO: Initialize Google Mobile Ads SDK
+  return MobileAds.instance.initialize();
 }
