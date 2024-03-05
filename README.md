@@ -20,3 +20,6 @@ samples, guidance on mobile development, and a full API reference.
 決めごと
 1. statefulWidgetクラスはdbアクセスのためのヘルパークラスのインスタンスを作成していい
 - ステートクラスが実質全部の処理をするので、こいつ単体のテストは多分書かない
+
+メモ
+- adb pairでワイヤレスデバッグできる　詳しくはググれ
