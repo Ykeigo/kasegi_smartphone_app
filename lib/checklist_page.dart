@@ -9,6 +9,12 @@ import 'package:get/get.dart';
 import 'package:flutter_application_1/see_history_page.dart';
 import 'package:logger/logger.dart';
 
+// TODO: Import ad_helper.dart
+import 'package:flutter_application_1/ad_helper.dart';
+
+// TODO: Import google_mobile_ads.dart
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+
 final _logger = Logger();
 
 enum InGameStatus { preGame, inGame, postGame }
@@ -45,6 +51,7 @@ void openSnackbar() {
 }
 
 class _ChecklistPageState extends State<ChecklistPage> {
+  BannerAd? _bannerAd;
   InGameStatus inGameStatus = InGameStatus.preGame;
   List<GameChecklist> gameChecklists = [];
   Map<int, List<CheckboxListTileState>> checkboxListTileStateList = {};
@@ -73,6 +80,30 @@ class _ChecklistPageState extends State<ChecklistPage> {
       await reloadGameChecklistItem();
       setState(() {});
     });
+
+    BannerAd(
+      adUnitId: AdHelper.bannerAdUnitId,
+      request: AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          setState(() {
+            _bannerAd = ad as BannerAd;
+          });
+        },
+        onAdFailedToLoad: (ad, err) {
+          logger.d('Failed to load a banner ad: ${err.message}');
+          ad.dispose();
+        },
+      ),
+    ).load();
+  }
+
+  @override
+  void dispose() {
+    // TODO: Dispose a BannerAd object
+    //_bannerAd?.dispose();
+    super.dispose();
   }
 
   SpeedDial myFloatingActionButton(BuildContext context) {
@@ -191,7 +222,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
     }
 
     return Positioned(
-      bottom: 10.0,
+      bottom: 60.0,
       width: 110.0,
       height: 110.0,
       child: ElevatedButton(
@@ -256,9 +287,21 @@ class _ChecklistPageState extends State<ChecklistPage> {
                         checkboxListTileStateList[gameChecklist.id] != null
                             ? gameStartusChangeButton(gameChecklist.id)
                             : Container() // チェック項目がない場合はボタンを表示しない
+                        ,
+                        if (_bannerAd != null)
+                          Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Container(
+                              width: _bannerAd!.size.width.toDouble(),
+                              height: _bannerAd!.size.height.toDouble(),
+                              child: AdWidget(ad: _bannerAd!),
+                            ),
+                          ),
                       ]))
                   .toList()),
-          floatingActionButton: myFloatingActionButton(context)),
+          floatingActionButton: Container(
+              margin: EdgeInsets.only(bottom: 50.0),
+              child: myFloatingActionButton(context))),
     ];
 
     if (inGameStatus == InGameStatus.inGame) {
