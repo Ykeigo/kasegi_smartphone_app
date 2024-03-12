@@ -299,7 +299,9 @@ class _ChecklistPageState extends State<ChecklistPage> {
                           ),
                       ]))
                   .toList()),
-          floatingActionButton: myFloatingActionButton(context)),
+          floatingActionButton: Container(
+              margin: EdgeInsets.only(bottom: 50.0),
+              child: myFloatingActionButton(context))),
     ];
 
     if (inGameStatus == InGameStatus.inGame) {
