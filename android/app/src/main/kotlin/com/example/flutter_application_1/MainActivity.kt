@@ -1,4 +1,4 @@
-package com.gyana_factory.flutter_application_1
+package com.gyana_factory.game_instinct
 
 import io.flutter.embedding.android.FlutterActivity
 

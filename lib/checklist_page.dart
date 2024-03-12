@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/db_helper.dart';
-import 'package:flutter_application_1/add_game_checklist_item_page.dart';
-import 'package:flutter_application_1/main.dart';
+import 'package:game_instinct/db_helper.dart';
+import 'package:game_instinct/add_game_checklist_item_page.dart';
+import 'package:game_instinct/main.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:flutter_application_1/add_game_checklist_page.dart';
+import 'package:game_instinct/add_game_checklist_page.dart';
 import 'package:collection/collection.dart';
 import 'package:get/get.dart';
-import 'package:flutter_application_1/see_history_page.dart';
+import 'package:game_instinct/see_history_page.dart';
 import 'package:logger/logger.dart';
 
 // TODO: Import ad_helper.dart
-import 'package:flutter_application_1/ad_helper.dart';
+import 'package:game_instinct/ad_helper.dart';
 
 // TODO: Import google_mobile_ads.dart
 import 'package:google_mobile_ads/google_mobile_ads.dart';

@@ -1,4 +1,4 @@
-# flutter_application_1
+# game_instinct
 
 A new Flutter project.
 
@@ -23,3 +23,7 @@ samples, guidance on mobile development, and a full API reference.
 
 メモ
 - adb pairでワイヤレスデバッグできる　詳しくはググれ
+
+ビルド
+バージョンを変える(pubspec.yaml)
+flutter build appbundle

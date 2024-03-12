@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/db_helper.dart';
+import 'package:game_instinct/db_helper.dart';
 import 'package:collection/collection.dart';
-import 'package:flutter_application_1/main.dart';
+import 'package:game_instinct/main.dart';
 import 'package:logger/logger.dart';
 
 class SeeHistoryPage extends StatefulWidget {
